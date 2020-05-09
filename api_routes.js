@@ -35,14 +35,8 @@ var storage = multer.diskStorage({
     destination: function (req, file, cb) {
         folderName = makeid(10);
         folderPath = path.posix.join("uploads/", folderName, "/");
-        fs.mkdir(folderPath, (err) => {
-            if (err) {
-                return console.log(err);
-            } else if (process.env.NODE_ENV === "development") {
-                console.log("Created folder at path: ", folderPath)
-            }
-            req.compressID = folderName;
-        });
+        fs.mkdirSync(folderPath);
+        req.compressID = folderName;
         cb(null, folderPath);
     },
     filename: function (req, file, cb) {

@@ -4,6 +4,22 @@ dotenv.config();
 const express = require("express");
 const del = require("del");
 const backendRoutes = require("./api_routes");
+const fs = require("fs");
+
+fs.access("compressedPics", fs.constants.F_OK, (err) => {
+    if (err && err.code === 'ENOENT') {
+        fs.mkdir("compressedPics/", (err) => {
+            console.log("ERROR: Failed to create compressedPics Folder");
+        });
+    }
+});
+fs.access("uploads",fs.constants.F_OK, (err) => {
+    if (err && err.code === 'ENOENT') {
+        fs.mkdir("uploads/", (err) => {
+            console.log("ERROR: Failed to create compressedPics Folder");
+        });
+    }
+});
 
 if(process.env.DELETE_ON_START){
     (async () => {
