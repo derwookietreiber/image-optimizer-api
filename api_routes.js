@@ -7,12 +7,23 @@ const fs = require("fs");
 
 
 
-const maxFileSize = 15 * 1024 * 1024 //15MB
+const maxFileSize = process.env.MAX_FILE_SIZE * 1024 * 1024
+
 
 function getFilesizeInBytes(filename) {
     var stats = fs.statSync(filename)
     var fileSizeInBytes = stats["size"]
     return fileSizeInBytes
+}
+
+function makeid(length) {
+    var result = '';
+    var characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+    var charactersLength = characters.length;
+    for (var i = 0; i < length; i++) {
+        result += characters.charAt(Math.floor(Math.random() * charactersLength));
+    }
+    return result;
 }
 
 
@@ -22,7 +33,17 @@ function getFilesizeInBytes(filename) {
 ////////////////////////////////////////
 var storage = multer.diskStorage({
     destination: function (req, file, cb) {
-        cb(null, 'uploads/')
+        folderName = makeid(10);
+        folderPath = path.posix.join("uploads/", folderName, "/");
+        fs.mkdir(folderPath, (err) => {
+            if (err) {
+                return console.log(err);
+            } else if (process.env.NODE_ENV === "development") {
+                console.log("Created folder at path: ", folderPath)
+            }
+            req.compressID = folderName;
+        });
+        cb(null, folderPath);
     },
     filename: function (req, file, cb) {
         if (file.mimetype === "image/jpeg") {
@@ -35,15 +56,17 @@ var storage = multer.diskStorage({
 
 
 var uploadSingle = multer({
-    limits: {fileSize: maxFileSize},
+    limits: {
+        fileSize: maxFileSize
+    },
     storage: storage,
     fileFilter: function (req, file, cb) {
         if (file.mimetype !== "image/png" && file.mimetype !== "image/jpeg") {
-            req.fileValidationError = 'goes wrong on the mimetype';
-            return cb(null, false, new Error('goes wrong on the mimetype'));
+            req.fileValidationError = 'MIME Type Error';
+            return cb(null, false, new Error('MIME Type Error'));
         }
         cb(null, true);
-      }
+    }
 }).single("fileUpload");
 
 ////////////////////////////////////////
@@ -52,41 +75,63 @@ var uploadSingle = multer({
 
 router.post("/upload", async (req, res) => {
     uploadSingle(req, res, async (err) => {
-        if(req.fileValidationError){
-            res.status(400).send({error: "Error 400 Wrong File Format"});
+        if (req.fileValidationError) {
+            res.status(400).send({
+                error: "Error 400 Wrong File Format"
+            });
             return;
         };
-        if(err){
-            res.status(400).json({error: "Error 400 Wrong File Syntax or Size"});
+        if (err) {
+            if (process.env.NODE_ENV === "development") {
+                console.log(err);
+            }
+            res.status(400).json({
+                error: "Error 400 Wrong File Syntax or Size"
+            });
             return;
         };
-        if(!req.file){
-            res.status(400).json({error: "Error 400 No file"});
+        if (!req.file) {
+            res.status(400).json({
+                error: "Error 400 No file"
+            });
             return;
         }
         if (req.file.mimetype === "image/jpeg" || req.file.mimetype === "image/png") {
-            let imagePath = path.posix.join("uploads/", req.file.filename);
+            if(process.env.NODE_ENV === "development") {
+                console.log(req.file);
+            }
+            let imagePath = path.posix.join(req.file.destination, req.file.filename);
             let originalSize = getFilesizeInBytes(imagePath);
-            let timeElapsed = await imageCompressor.compressJPEG(imagePath);
-            if(!timeElapsed){
-                res.status(500).json({error: "500 - Internal Server Error"});
+            let newImagePath = path.join("compressedPics/", req.compressID, "/", req.file.filename);
+            let timeElapsed = await imageCompressor.compressJPEG(imagePath, path.posix.join("compressedPics/", req.compressID));
+            if (!timeElapsed) {
+                res.status(500).json({
+                    error: "500 - Internal Server Error"
+                });
                 return
             }
-            let newImagePath = path.join("compressedPics/", req.file.filename);
             let newSize = getFilesizeInBytes(newImagePath);
             let percentReduction = 100 - ((newSize * 100) / originalSize);
-            res.status(200).json({timeElapsed: timeElapsed, originalSize: originalSize, newSize: newSize, reduction: percentReduction, downloadLink: "/download?downloadID=" + req.file.filename, timestamp: new Date()});
+            res.status(200).json({
+                timeElapsed: timeElapsed,
+                originalSize: originalSize,
+                newSize: newSize,
+                reduction: percentReduction,
+                downloadLink: "/download?compressID=" + req.compressID + "&fileName=" + req.file.filename,
+                timestamp: new Date()
+            });
         }
     })
 });
 
 router.get("/download", (req, res) => {
-    downloadID = req.query.downloadID;
-    res.download(path.join("compressedPics/", downloadID));
+    res.download(path.join("compressedPics/", req.query.compressID, "/", req.query.fileName));
 })
 
 router.use((req, res, next) => {
-    res.status(404).json({error: "404 Path not Found"});
+    res.status(404).json({
+        error: "404 Path not Found"
+    });
 });
 
 module.exports = router;
