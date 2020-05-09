@@ -15,6 +15,9 @@ compressModule.compressJPEG = async function compressJPEG(filePath) {
             ]
         }
     );
+    if(process.env.NODE_ENV === "development"){
+        console.log(files);
+    }
     if(files.length === 0){
         console.log("Error in JPEG Image Compression")
         return
