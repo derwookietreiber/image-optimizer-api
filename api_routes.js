@@ -34,6 +34,9 @@ const storage = multer.diskStorage({
     const folderName = makeid(10);
     const folderPath = path.posix.join('uploads/', folderName, '/');
     fs.mkdirSync(folderPath);
+    if (process.env.DEBUG) {
+      console.log('Created folder at: ', folderPath);
+    }
     req.compressID = folderName;
     cb(null, folderPath);
   },
@@ -71,14 +74,28 @@ router.post('/upload', async (req, res) => {
       res.status(400).send({
         error: 'Error 400 Wrong File Format',
       });
+      if (process.env.DEBUG) {
+        console.log('Failed at Wrong File Format');
+      }
       return;
     }
     if (err) {
-      if (process.env.NODE_ENV === 'development') {
+      let errorMessage = '';
+      switch (err.code) {
+        case 'LIMIT_FILE_SIZE':
+          errorMessage = 'Error 400 File Size Exceeded';
+          break;
+        default:
+          res.status(500).json({
+            error: 'Error 500 Internal Server Error',
+          });
+          return;
+      }
+      if (process.env.DEBUG) {
         console.log(err);
       }
       res.status(400).json({
-        error: 'Error 400 Wrong File Syntax or Size',
+        error: errorMessage,
       });
       return;
     }
@@ -86,6 +103,9 @@ router.post('/upload', async (req, res) => {
       res.status(400).json({
         error: 'Error 400 No file',
       });
+      if (process.env.DEBUG) {
+        console.log('No file Supplied');
+      }
       return;
     }
     if (req.file.mimetype === 'image/jpeg' || req.file.mimetype === 'image/png') {
