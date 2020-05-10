@@ -1,4 +1,5 @@
 const dotenv = require('dotenv'); // Set Up Env. Variables before everything else
+
 dotenv.config();
 
 const express = require('express');

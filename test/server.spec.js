@@ -5,6 +5,8 @@ const chaiHTTP = require('chai-http');
 const fs = require('fs');
 const server = require('../app');
 
+const { expect } = chai;
+
 chai.use(chaiHTTP);
 
 describe('File Restrictions', () => {
@@ -12,7 +14,8 @@ describe('File Restrictions', () => {
     chai.request(server)
       .post('/upload')
       .end((err, res) => {
-        res.should.have.status(400);
+        console.log(res.status);
+        expect(res).to.have.status(400);
         done();
       });
   });
@@ -21,7 +24,7 @@ describe('File Restrictions', () => {
       .post('/upload')
       .attach('fileUpload', fs.readFileSync('test/test_files/wrongFile.xml'), 'wrongFile.xml')
       .end((err, res) => {
-        res.should.have.status(400);
+        expect(res).to.have.status(400);
         done();
       });
   });
@@ -30,7 +33,7 @@ describe('File Restrictions', () => {
       .post('/upload')
       .attach('fileUpload', fs.readFileSync('test/test_files/20MB_Picture.jpg'), '20MB_Picture.jpg')
       .end((err, res) => {
-        res.should.have.status(400);
+        expect(res).to.have.status(400);
         done();
       });
   });
@@ -42,9 +45,9 @@ describe('JPEG Compression', () => {
       .post('/upload')
       .attach('fileUpload', fs.readFileSync('test/test_files/patrick-tomasso.jpg'), 'patrick-tomasso.jpg')
       .end((err, res) => {
-        res.should.have.status(200);
-        res.body.should.be.a('object');
-        res.body.should.have.property('downloadLink');
+        expect(res).to.have.status(200);
+        expect(res.body).to.be.a('object');
+        expect(res.body).to.have.property('downloadLink');
         downloadLink = res.body.downloadLink;
         done();
       });
@@ -53,8 +56,8 @@ describe('JPEG Compression', () => {
     chai.request(server)
       .get(downloadLink)
       .end((err, res) => {
-        res.should.have.status(200);
-        res.should.have.header('Content-Type', 'image/jpeg');
+        expect(res).to.have.status(200);
+        expect(res).to.have.header('Content-Type', 'image/jpeg');
         done();
       });
   });
@@ -66,9 +69,9 @@ describe('PNG Compression', () => {
       .post('/upload')
       .attach('fileUpload', fs.readFileSync('test/test_files/patrick-tomasso.png'), 'patrick-tomasso.png')
       .end((err, res) => {
-        res.should.have.status(200);
-        res.body.should.be.a('object');
-        res.body.should.have.property('downloadLink');
+        expect(res).to.have.status(200);
+        expect(res.body).to.be.a('object');
+        expect(res.body).to.have.property('downloadLink');
         downloadLink = res.body.downloadLink;
         done();
       });
@@ -77,8 +80,8 @@ describe('PNG Compression', () => {
     chai.request(server)
       .get(downloadLink)
       .end((err, res) => {
-        res.should.have.status(200);
-        res.should.have.header('Content-Type', 'image/png');
+        expect(res).to.have.status(200);
+        expect(res).to.have.header('Content-Type', 'image/png');
         done();
       });
   });
