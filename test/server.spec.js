@@ -3,22 +3,45 @@ process.env.NODE_ENV = 'test';
 const chai = require('chai');
 const chaiHTTP = require('chai-http');
 const fs = require('fs');
-const server = require('../app');
+const testFunctions = require('./testFunctions');
 
 const { expect } = chai;
 
 chai.use(chaiHTTP);
 
-describe('File Restrictions', () => {
+
+testFunctions.deleteFolders();
+const server = require('../app');
+
+describe('Server Errors', () => {
+  it('Should respond with 404', (done) => {
+    chai.request(server)
+      .post('/notExistingPath')
+      .end((err, res) => {
+        expect(res).to.have.status(404);
+        done();
+      });
+  });
   it('Should not allow empty post request', (done) => {
     chai.request(server)
       .post('/upload')
       .end((err, res) => {
-        console.log(res.status);
         expect(res).to.have.status(400);
         done();
       });
   });
+  it('Should not allow wrong upload field', (done) => {
+    chai.request(server)
+      .post('/upload')
+      .attach('wrongField', fs.readFileSync('test/test_files/wrongFile.xml'), 'wrongFile.xml')
+      .end((err, res) => {
+        expect(res).to.have.status(400);
+        done();
+      });
+  });
+});
+
+describe('File Restrictions', () => {
   it('Should not allow wrong File format', (done) => {
     chai.request(server)
       .post('/upload')
@@ -43,7 +66,7 @@ describe('JPEG Compression', () => {
   it('Should Compress JPEG', (done) => {
     chai.request(server)
       .post('/upload')
-      .attach('fileUpload', fs.readFileSync('test/test_files/patrick-tomasso.jpg'), 'patrick-tomasso.jpg')
+      .attach('fileUpload', fs.readFileSync('test/test_files/patrick-tomasso.jpg'), '/patrick-tomasso.jpg')
       .end((err, res) => {
         expect(res).to.have.status(200);
         expect(res.body).to.be.a('object');

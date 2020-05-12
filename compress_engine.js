@@ -17,11 +17,12 @@ compressModule.compressJPEG = async function compressJPEG(filePath, destinationP
       ],
     },
   );
-  if (process.env.NODE_ENV === 'development') {
+  /* istanbul ignore if  */
+  if (process.env.DEBUG === 'debug') {
     console.log(files);
   }
   if (files.length === 0) {
-    return console.log('Error in JPEG Image Compression');
+    return console.log('Error in Image Compression');
   }
   return (Date.now() - startTime);
 };

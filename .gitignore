@@ -2,3 +2,5 @@ node_modules/
 compressedPics/*
 uploads/*
 .env
+.nyc_output/
+coverage/
