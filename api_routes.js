@@ -18,7 +18,6 @@ router.post('/upload', multerConfig.fileValidator, async (req, res) => {
   const startTime = Date.now();
   const compressedFiles = [];
   await Promise.all(req.files.map(async (file) => {
-    console.log(new Date());
     const imagePath = path.posix.join(file.destination, file.filename);
     const originalSize = usefulFunctions.getFileSizeInBytes(imagePath);
     const newImagePath = path.join('compressedPics/', req.compressID, '/', file.filename);

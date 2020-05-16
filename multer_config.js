@@ -4,19 +4,27 @@ const fs = require('fs');
 const usefulFunctions = require('./useful_functions');
 
 const maxFileSize = process.env.MAX_FILE_SIZE * 1024 * 1024;
+const maxFiles = parseInt(process.env.MAX_FILES, 10);
 
 const multerConfig = {};
 
 const storage = multer.diskStorage({
   destination(req, file, cb) {
-    const folderName = usefulFunctions.makeID(10);
-    const folderPath = path.posix.join('uploads/', folderName, '/');
-    fs.mkdirSync(folderPath);
-    /* istanbul ignore if  */
-    if (process.env.DEBUG === 'true') {
-      console.log('Created folder at: ', folderPath);
+    let folderName;
+    let folderPath;
+    if (!req.compressID) {
+      folderName = usefulFunctions.makeID(10);
+      req.compressID = folderName;
+      folderPath = path.posix.join('uploads/', folderName, '/');
+      fs.mkdirSync(folderPath);
+      /* istanbul ignore if  */
+      if (process.env.DEBUG === 'true') {
+        console.log('Created folder at: ', folderPath);
+      }
+    } else {
+      folderName = req.compressID;
+      folderPath = path.posix.join('uploads/', folderName, '/');
     }
-    req.compressID = folderName;
     cb(null, folderPath);
   },
   filename(req, file, cb) {
@@ -40,7 +48,7 @@ multerConfig.uploadFiles = multer({
     }
     return cb(null, true);
   },
-}).array('fileUpload', process.env.MAX_FILES);
+}).array('fileUpload', maxFiles);
 
 multerConfig.fileValidator = function fileValidator(req, res, next) {
   multerConfig.uploadFiles(req, res, async (err) => {
@@ -75,11 +83,11 @@ multerConfig.fileValidator = function fileValidator(req, res, next) {
         case 'LIMIT_FILE_SIZE':
           errorMessage = 'Error 400 File Size Exceeded';
           break;
+        case 'LIMIT_UNEXPECTED_FILE':
+          errorMessage = 'Error 400 Too Many Files';
+          break;
         default:
-          res.status(400).json({
-            error: 'Error 400 Bad Request',
-          });
-          return;
+          errorMessage = 'Error 400 Bad Request';
       }
       /* istanbul ignore if  */
       if (process.env.DEBUG === 'true') {
@@ -88,8 +96,8 @@ multerConfig.fileValidator = function fileValidator(req, res, next) {
       res.status(400).json({
         error: errorMessage,
       });
+      return;
     }
-
     next();
   });
 };
