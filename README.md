@@ -1,4 +1,4 @@
-# Image Optimizer API ![Build](https://travis-ci.com/derwookietreiber/image-optimizer-api.svg?branch=master) ![Build](https://img.shields.io/david/derwookietreiber/image-optimizer-api)
+# Image Optimizer API [![Build Status](https://travis-ci.com/wokiex/image-optimizer-api.svg?branch=master)](https://travis-ci.com/wokiex/image-optimizer-api) ![Build](https://img.shields.io/david/wokiex/image-optimizer-api)
 
 Image Optimizer is a Node.js based API for Image Optimization. Right now it accepts the following formats:
 
