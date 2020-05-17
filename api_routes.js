@@ -38,11 +38,13 @@ router.post('/upload', multerConfig.fileValidator, async (req, res) => {
       downloadLink: `/download?compressID=${req.compressID}&fileName=${file.filename}`,
     });
   }));
-  usefulFunctions.makeZip(req.compressID);
+  await usefulFunctions.makeZip(req.compressID);
+  const zipChecksum = await usefulFunctions.generateChecksum(path.posix.join('compressedPics/', `${req.compressID}.zip`));
   res.status(200).json({
     totalTimeElapsed: Date.now() - startTime,
     compressedImages: compressedFiles,
     zipDownloadLink: `/download?compressID=${req.compressID}`,
+    zipMD5: zipChecksum,
     timestamp: new Date(),
   });
 });
