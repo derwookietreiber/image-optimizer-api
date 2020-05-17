@@ -38,15 +38,26 @@ router.post('/upload', multerConfig.fileValidator, async (req, res) => {
       downloadLink: `/download?compressID=${req.compressID}&fileName=${file.filename}`,
     });
   }));
+  usefulFunctions.makeZip(req.compressID);
   res.status(200).json({
     totalTimeElapsed: Date.now() - startTime,
     compressedImages: compressedFiles,
+    zipDownloadLink: `/download?compressID=${req.compressID}`,
     timestamp: new Date(),
   });
 });
 
 router.get('/download', (req, res) => {
-  res.download(path.join('compressedPics/', req.query.compressID, '/', req.query.fileName));
+  if (!req.query.compressID) {
+    res.status(400).json({
+      error: '400 - Wrong Query Params',
+    });
+  }
+  if (req.query.fileName) {
+    res.download(path.join('compressedPics/', req.query.compressID, '/', req.query.fileName));
+  } else {
+    res.download(path.posix.join('compressedPics/', `${req.query.compressID}.zip`));
+  }
 });
 
 router.use((req, res) => {
