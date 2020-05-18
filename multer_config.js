@@ -51,19 +51,7 @@ multerConfig.uploadFiles = multer({
 }).array('fileUpload', maxFiles);
 
 multerConfig.fileValidator = function fileValidator(req, res, next) {
-  multerConfig.uploadFiles(req, res, async (err) => {
-    // No File Supplied
-    if (req.files.length === 0) {
-      res.status(400).json({
-        error: 'Error 400 No file',
-      });
-      /* istanbul ignore if  */
-      if (process.env.DEBUG === 'true') {
-        console.log('No file Supplied');
-      }
-      return;
-    }
-
+  multerConfig.uploadFiles(req, res, (err) => {
     // Wrong File MIME
     if (req.fileValidationError) {
       res.status(400).send({
@@ -75,7 +63,6 @@ multerConfig.fileValidator = function fileValidator(req, res, next) {
       }
       return;
     }
-
     // Multer Error
     if (err) {
       let errorMessage = '';
@@ -96,6 +83,17 @@ multerConfig.fileValidator = function fileValidator(req, res, next) {
       res.status(400).json({
         error: errorMessage,
       });
+      return;
+    }
+    // No File Supplied
+    if (!req.files || req.files.length === 0) {
+      res.status(400).json({
+        error: 'Error 400 No file',
+      });
+      /* istanbul ignore if  */
+      if (process.env.DEBUG === 'true') {
+        console.log('No file Supplied');
+      }
       return;
     }
     next();

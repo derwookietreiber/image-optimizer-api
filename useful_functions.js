@@ -27,13 +27,12 @@ usefulFunctions.makeZip = function makeZip(compressID) {
     const archive = archiver('zip');
 
     output.on('close', () => {
-      console.log(`${archive.pointer()} total bytes`);
-      console.log('archiver has been finalized and the output file descriptor has closed.');
+      /* istanbul ignore if */
+      if (process.env.DEBUG === 'true') {
+        console.log(`${archive.pointer()} total bytes`);
+        console.log('archiver has been finalized and the output file descriptor has closed.');
+      }
       return resolve('Resolved');
-    });
-
-    output.on('end', () => {
-      console.log('Data has been drained');
     });
 
     archive.on('warning', (err) => {
