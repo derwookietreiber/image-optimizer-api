@@ -164,10 +164,9 @@ describe('Multifile Support', () => {
         expect(res.body.compressedImages).to.have.length(8);
         downloadLink = res.body.zipDownloadLink;
         origMD5 = res.body.zipMD5;
-        console.log(res.body.zipMD5);
         done();
       });
-  }).timeout(15000);
+  }).timeout(25000);
   it('Should Download Zip Folder', (done) => {
     chai.request(server)
       .get(downloadLink)
