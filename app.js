@@ -4,8 +4,8 @@ dotenv.config();
 
 
 const express = require('express');
-const backendRoutes = require('./api_routes');
-const folderManager = require('./folder_manager');
+const backendRoutes = require('./lib/api_routes');
+const folderManager = require('./lib/folder_manager');
 
 // Check folders
 folderManager.checkFolders();
